@@ -23,7 +23,8 @@ except ImportError:
 st.set_page_config(
     page_title="投递侠AI",
     page_icon="🦸",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 DATA_FILE = "applications.csv"
@@ -282,12 +283,14 @@ def inject_custom_css():
         }
 
         .landing-tag {
-            padding: 9px 15px;
+            padding: 9px 16px;
             border-radius: 999px;
-            background: rgba(255,255,255,0.16);
-            border: 1px solid rgba(255,255,255,0.23);
+            background: rgba(255,255,255,0.22);
+            border: 1px solid rgba(255,255,255,0.38);
+            color: #ffffff;
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 850;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
         }
 
         .login-card-title {
@@ -396,14 +399,15 @@ def inject_custom_css():
 
         .tag {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 7px 14px;
             border-radius: 999px;
-            background: #eef2ff;
-            color: #3730a3;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: #ffffff;
             font-size: 13px;
-            font-weight: 700;
-            margin-right: 8px;
+            font-weight: 800;
+            margin-right: 10px;
             margin-top: 14px;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
         }
 
         .section-title {
@@ -575,14 +579,8 @@ def inject_custom_css():
             border: 1px solid #e5e7eb;
         }
 
-        .small-muted {
-            color: #64748b;
-            font-size: 13px;
-            line-height: 1.7;
-        }
-
         header {
-            visibility: hidden;
+            background: transparent !important;
         }
 
         footer {
@@ -625,7 +623,6 @@ def render_hero():
             <span class="tag">岗位分析</span>
             <span class="tag">话术生成</span>
             <span class="tag">投递记录</span>
-            <span class="tag">多账号隔离</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -842,7 +839,6 @@ def show_auth_page():
                     <span class="landing-tag">岗位 JD 自动分析</span>
                     <span class="landing-tag">求职话术生成</span>
                     <span class="landing-tag">投递记录管理</span>
-                    <span class="landing-tag">账号数据隔离</span>
                 </div>
             </div>
             """,
@@ -854,7 +850,7 @@ def show_auth_page():
             """
             <div class="login-card-title">账号入口</div>
             <div class="login-card-subtitle">
-                注册后即可开始使用。不同账号之间的简历分析和投递记录会自动隔离。
+                注册后即可开始使用。上传简历、分析岗位、管理投递记录，都可以在一个页面完成。
             </div>
             """,
             unsafe_allow_html=True

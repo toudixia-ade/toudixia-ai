@@ -20,7 +20,11 @@ except ImportError:
     Document = None
 
 
-st.set_page_config(page_title="投递侠AI", layout="wide")
+st.set_page_config(
+    page_title="投递侠AI",
+    page_icon="🦸",
+    layout="wide"
+)
 
 DATA_FILE = "applications.csv"
 USER_DB_FILE = "users.db"
@@ -98,12 +102,556 @@ FRESH_GRAD_KEYWORDS = [
 ]
 
 
-# =========================
-# 用户注册 / 登录相关函数
-# =========================
+def inject_custom_css():
+    st.markdown(
+        """
+        <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --purple: #7c3aed;
+            --bg: #f6f8fc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        html, body, [class*="css"] {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        .stApp {
+            background:
+                radial-gradient(circle at 12% 12%, rgba(37, 99, 235, 0.18), transparent 30%),
+                radial-gradient(circle at 88% 18%, rgba(124, 58, 237, 0.16), transparent 32%),
+                linear-gradient(180deg, #f8fbff 0%, #f3f6fc 100%);
+        }
+
+        .block-container {
+            max-width: 1520px;
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+
+        h1, h2, h3 {
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .auth-brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .auth-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 900;
+            color: #172554;
+        }
+
+        .auth-logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+        }
+
+        .auth-version {
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(226,232,240,0.9);
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .landing-hero {
+            padding: 54px 56px;
+            border-radius: 34px;
+            background:
+                linear-gradient(135deg, rgba(37,99,235,0.96) 0%, rgba(79,70,229,0.96) 48%, rgba(124,58,237,0.96) 100%);
+            color: white;
+            box-shadow: 0 28px 80px rgba(37, 99, 235, 0.28);
+            min-height: 455px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .landing-hero:after {
+            content: "";
+            position: absolute;
+            right: -120px;
+            top: -120px;
+            width: 360px;
+            height: 360px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.14);
+        }
+
+        .landing-kicker {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.24);
+            font-size: 14px;
+            font-weight: 750;
+            margin-bottom: 22px;
+        }
+
+        .landing-title {
+            font-size: 58px;
+            line-height: 1.08;
+            font-weight: 950;
+            letter-spacing: -0.06em;
+            margin-bottom: 22px;
+            max-width: 760px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .landing-subtitle {
+            font-size: 19px;
+            line-height: 1.9;
+            opacity: 0.94;
+            max-width: 760px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .landing-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 760px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .landing-tag {
+            padding: 9px 15px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.23);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .login-card-title {
+            font-size: 28px;
+            font-weight: 920;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .login-card-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .feature-grid-title {
+            font-size: 22px;
+            font-weight: 930;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            color: #0f172a;
+        }
+
+        .value-card {
+            padding: 24px 24px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.88);
+            border: 1px solid rgba(226,232,240,0.95);
+            box-shadow: 0 14px 42px rgba(15, 23, 42, 0.06);
+            height: 100%;
+        }
+
+        .value-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .value-text {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.85;
+        }
+
+        .scenario-list {
+            padding: 26px 30px;
+            border-radius: 26px;
+            background: rgba(255,255,255,0.88);
+            border: 1px solid rgba(226,232,240,0.95);
+            box-shadow: 0 14px 42px rgba(15, 23, 42, 0.06);
+            margin-top: 28px;
+        }
+
+        .scenario-title {
+            font-size: 22px;
+            font-weight: 930;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .scenario-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .scenario-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 99px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .hero-card {
+            padding: 34px;
+            border-radius: 28px;
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(239,246,255,0.95) 55%, rgba(245,243,255,0.95) 100%);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
+            margin-bottom: 26px;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 10px;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-subtitle {
+            font-size: 17px;
+            color: #475569;
+            line-height: 1.9;
+            max-width: 880px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: 13px;
+            font-weight: 700;
+            margin-right: 8px;
+            margin-top: 14px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 850;
+            color: #0f172a;
+            margin-top: 14px;
+            margin-bottom: 12px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: -4px;
+            margin-bottom: 16px;
+        }
+
+        .metric-card {
+            padding: 22px 18px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+            min-height: 132px;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-weight: 650;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            color: #2563eb;
+            font-weight: 900;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .metric-note {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        .info-card {
+            padding: 22px 24px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.045);
+            margin-bottom: 16px;
+        }
+
+        .info-card-title {
+            font-size: 18px;
+            font-weight: 850;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .info-card-text {
+            font-size: 15px;
+            color: #374151;
+            line-height: 1.85;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .status-success {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .status-warning {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .status-danger {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .user-badge {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+            border: 1px solid #dbeafe;
+            color: #1e3a8a;
+            font-weight: 800;
+            margin-bottom: 14px;
+        }
+
+        div.stButton > button {
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            font-weight: 800;
+            min-height: 44px;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.20);
+            transition: all 0.2s ease;
+        }
+
+        div.stButton > button:hover {
+            transform: translateY(-1px);
+            filter: brightness(0.98);
+            color: white;
+            border: none;
+        }
+
+        div.stDownloadButton > button {
+            border-radius: 14px;
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 800;
+            min-height: 42px;
+        }
+
+        .stTextInput input,
+        .stTextArea textarea {
+            border-radius: 14px !important;
+            border: 1px solid #e2e8f0 !important;
+            min-height: 42px;
+        }
+
+        .stSelectbox div[data-baseweb="select"] {
+            border-radius: 14px !important;
+        }
+
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 999px;
+            padding: 8px 18px;
+            background: #f1f5f9;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 800;
+        }
+
+        div[data-testid="stSidebar"] {
+            background: rgba(255, 255, 255, 0.86);
+            border-right: 1px solid #e5e7eb;
+        }
+
+        div[data-testid="stDataFrame"] {
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .small-muted {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        header {
+            visibility: hidden;
+        }
+
+        footer {
+            visibility: hidden;
+        }
+
+        #MainMenu {
+            visibility: hidden;
+        }
+
+        @media (max-width: 900px) {
+            .block-container {
+                padding-left: 1.2rem;
+                padding-right: 1.2rem;
+            }
+
+            .landing-title {
+                font-size: 42px;
+            }
+
+            .landing-hero {
+                padding: 36px 30px;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def render_hero():
+    st.markdown(
+        """
+        <div class="hero-card">
+            <div class="hero-title">投递侠AI</div>
+            <div class="hero-subtitle">
+                AI 简历匹配与半自动投递工作台。上传多份简历，粘贴岗位 JD，系统会自动分析岗位匹配度、推荐合适简历，并生成求职沟通话术。
+            </div>
+            <span class="tag">简历匹配</span>
+            <span class="tag">岗位分析</span>
+            <span class="tag">话术生成</span>
+            <span class="tag">投递记录</span>
+            <span class="tag">多账号隔离</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def render_metric_card(label, value, note=""):
+    note_html = f'<div class="metric-note">{note}</div>' if note else ""
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-label">{label}</div>
+            <div class="metric-value">{value}</div>
+            {note_html}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def render_section_title(title, subtitle=""):
+    subtitle_html = f'<div class="section-subtitle">{subtitle}</div>' if subtitle else ""
+    st.markdown(
+        f"""
+        <div class="section-title">{title}</div>
+        {subtitle_html}
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def render_info_card(title, content):
+    st.markdown(
+        f"""
+        <div class="info-card">
+            <div class="info-card-title">{title}</div>
+            <div class="info-card-text">{content}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def render_status_message(recommendation):
+    if recommendation == "建议投递":
+        css_class = "status-success"
+        text = "建议投递：这个岗位和求职者背景比较匹配。"
+    elif recommendation == "可以投递":
+        css_class = "status-warning"
+        text = "可以投递：但建议根据岗位重点调整简历和话术。"
+    else:
+        css_class = "status-danger"
+        text = "不太建议投递：匹配度偏低，可能浪费时间。"
+
+    st.markdown(
+        f"""
+        <div class="status-pill {css_class}">{text}</div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 def init_user_db():
-    """初始化用户数据库。"""
     conn = sqlite3.connect(USER_DB_FILE)
     cursor = conn.cursor()
 
@@ -123,7 +671,6 @@ def init_user_db():
 
 
 def hash_password(password):
-    """给密码加盐并哈希，避免明文保存密码。"""
     salt = secrets.token_hex(16)
     password_hash = hashlib.pbkdf2_hmac(
         "sha256",
@@ -136,7 +683,6 @@ def hash_password(password):
 
 
 def verify_password(password, stored_password_hash):
-    """验证用户输入的密码是否正确。"""
     try:
         salt, saved_hash = stored_password_hash.split("$")
     except ValueError:
@@ -153,7 +699,6 @@ def verify_password(password, stored_password_hash):
 
 
 def username_exists(username):
-    """检查用户名是否已经存在。"""
     conn = sqlite3.connect(USER_DB_FILE)
     cursor = conn.cursor()
 
@@ -166,7 +711,6 @@ def username_exists(username):
 
 
 def create_user(username, password):
-    """创建新用户。"""
     username = username.strip()
 
     if not username:
@@ -205,7 +749,6 @@ def create_user(username, password):
 
 
 def login_user(username, password):
-    """登录用户。"""
     username = username.strip()
 
     conn = sqlite3.connect(USER_DB_FILE)
@@ -231,57 +774,160 @@ def login_user(username, password):
 
 
 def show_auth_page():
-    """展示登录 / 注册页面。"""
-    st.title("投递侠AI")
+    st.markdown(
+        """
+        <div class="auth-brand-row">
+            <div class="auth-logo">
+                <span class="auth-logo-icon">侠</span>
+                <span>投递侠AI</span>
+            </div>
+            <div class="auth-version">AI 简历匹配与半自动投递工作台</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    st.write("登录后使用投递侠AI，上传简历、分析岗位、保存投递记录。")
+    left_col, right_col = st.columns([1.45, 0.95], gap="large")
 
-    tab_login, tab_register = st.tabs(["登录", "注册"])
+    with left_col:
+        st.markdown(
+            """
+            <div class="landing-hero">
+                <div class="landing-kicker">为正在求职的人，减少无效投递</div>
+                <div class="landing-title">让每一次简历投递，都更精准一点。</div>
+                <div class="landing-subtitle">
+                    上传多份简历，粘贴岗位 JD，投递侠AI 会自动识别岗位方向、分析匹配度、
+                    推荐更适合投递的简历版本，并生成自然的求职沟通话术。
+                    你可以把它当成自己的求职投递工作台。
+                </div>
+                <div class="landing-tags">
+                    <span class="landing-tag">多份简历智能匹配</span>
+                    <span class="landing-tag">岗位 JD 自动分析</span>
+                    <span class="landing-tag">求职话术生成</span>
+                    <span class="landing-tag">投递记录管理</span>
+                    <span class="landing-tag">账号数据隔离</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-    with tab_login:
-        st.subheader("用户登录")
+    with right_col:
+        st.markdown(
+            """
+            <div class="login-card-title">账号入口</div>
+            <div class="login-card-subtitle">
+                注册后即可开始使用。不同账号之间的简历分析和投递记录会自动隔离。
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-        with st.form("login_form"):
-            username = st.text_input("用户名")
-            password = st.text_input("密码", type="password")
-            submitted = st.form_submit_button("登录")
+        tab_login, tab_register = st.tabs(["登录", "注册"])
 
-            if submitted:
-                success, message = login_user(username, password)
+        with tab_login:
+            with st.form("login_form"):
+                username = st.text_input("用户名")
+                password = st.text_input("密码", type="password")
+                submitted = st.form_submit_button("登录")
 
-                if success:
-                    st.session_state.logged_in = True
-                    st.session_state.username = username.strip()
-                    st.session_state.latest_result = None
-                    st.success(message)
-                    st.rerun()
-                else:
-                    st.error(message)
-
-    with tab_register:
-        st.subheader("注册账号")
-
-        with st.form("register_form"):
-            new_username = st.text_input("设置用户名")
-            new_password = st.text_input("设置密码", type="password")
-            confirm_password = st.text_input("确认密码", type="password")
-            submitted = st.form_submit_button("注册")
-
-            if submitted:
-                if new_password != confirm_password:
-                    st.error("两次输入的密码不一致。")
-                else:
-                    success, message = create_user(new_username, new_password)
+                if submitted:
+                    success, message = login_user(username, password)
 
                     if success:
+                        st.session_state.logged_in = True
+                        st.session_state.username = username.strip()
+                        st.session_state.latest_result = None
                         st.success(message)
+                        st.rerun()
                     else:
                         st.error(message)
 
+        with tab_register:
+            with st.form("register_form"):
+                new_username = st.text_input("设置用户名")
+                new_password = st.text_input("设置密码", type="password")
+                confirm_password = st.text_input("确认密码", type="password")
+                submitted = st.form_submit_button("注册")
 
-# =========================
-# 投递记录相关函数
-# =========================
+                if submitted:
+                    if new_password != confirm_password:
+                        st.error("两次输入的密码不一致。")
+                    else:
+                        success, message = create_user(new_username, new_password)
+
+                        if success:
+                            st.success(message)
+                        else:
+                            st.error(message)
+
+    st.markdown('<div class="feature-grid-title">投递侠AI 适合这些人</div>', unsafe_allow_html=True)
+
+    people_col1, people_col2, people_col3 = st.columns(3, gap="large")
+
+    with people_col1:
+        st.markdown(
+            """
+            <div class="value-card">
+                <div class="value-title">应届生 / 留学生</div>
+                <div class="value-text">
+                    面对多个岗位方向，不知道该用哪份简历投递。系统可以根据岗位 JD 判断更适合使用运营版、人力版、行政版还是通用版简历。
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with people_col2:
+        st.markdown(
+            """
+            <div class="value-card">
+                <div class="value-title">正在海投的人</div>
+                <div class="value-text">
+                    每天投递很多岗位，容易忘记投过哪个公司、岗位状态如何、HR 有没有回复。投递侠AI 可以帮你统一记录和跟进。
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with people_col3:
+        st.markdown(
+            """
+            <div class="value-card">
+                <div class="value-title">多方向求职者</div>
+                <div class="value-text">
+                    同时投递运营、HR、行政、市场、管培等岗位时，可以快速判断岗位重点，减少乱投、错投和低质量投递。
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    scenario_html = (
+        '<div class="scenario-list">'
+        '<div class="scenario-title">它可以帮你完成什么？</div>'
+        '<div class="scenario-item">'
+        '<div class="scenario-dot"></div>'
+        '<div>把岗位 JD 自动拆解成岗位方向、核心关键词、潜在风险和简历优化建议。</div>'
+        '</div>'
+        '<div class="scenario-item">'
+        '<div class="scenario-dot"></div>'
+        '<div>在多份简历中推荐最适合当前岗位的一份，避免每次都凭感觉选择简历。</div>'
+        '</div>'
+        '<div class="scenario-item">'
+        '<div class="scenario-dot"></div>'
+        '<div>生成更像真人求职者发给 HR 的沟通话术，而不是机械模板。</div>'
+        '</div>'
+        '<div class="scenario-item">'
+        '<div class="scenario-dot"></div>'
+        '<div>保存每一次投递记录，包括公司、岗位、薪资、链接、状态、备注和后续跟进。</div>'
+        '</div>'
+        '</div>'
+    )
+
+    st.markdown(scenario_html, unsafe_allow_html=True)
+
 
 def create_empty_dataframe():
     return pd.DataFrame(columns=ALL_COLUMNS)
@@ -296,7 +942,6 @@ def ensure_columns(df):
 
 
 def load_all_applications():
-    """读取所有用户的投递记录。"""
     if os.path.exists(DATA_FILE):
         df = pd.read_csv(DATA_FILE, encoding="utf-8-sig")
         return ensure_columns(df)
@@ -305,7 +950,6 @@ def load_all_applications():
 
 
 def load_user_applications(username):
-    """只读取当前登录用户的投递记录。"""
     df = load_all_applications()
 
     if "用户名" not in df.columns:
@@ -328,15 +972,10 @@ def save_application(record):
 
 
 def clear_user_applications(username):
-    """只清空当前用户自己的投递记录，不影响其他用户。"""
     df = load_all_applications()
     df = df[df["用户名"] != username].copy()
     save_dataframe(df)
 
-
-# =========================
-# 简历读取与分析相关函数
-# =========================
 
 def extract_text_from_uploaded_file(uploaded_file):
     file_name = uploaded_file.name
@@ -716,7 +1355,6 @@ def build_resume_suggestions(jd_text, recommended_resume, resume_match_results):
 
 
 def build_greeting(candidate_identity, education_background, experience_summary, job_title, recommended_resume):
-    """生成适合招聘平台私聊的短话术。"""
     education_text = education_background.strip()
     experience_text = experience_summary.strip()
 
@@ -761,10 +1399,13 @@ def list_to_text(items):
     return "\n".join([f"{index + 1}. {item}" for index, item in enumerate(items)])
 
 
-# =========================
-# 应用启动：先处理登录状态
-# =========================
+def get_count_by_status(df, status):
+    if df.empty or "投递状态" not in df.columns:
+        return 0
+    return int((df["投递状态"] == status).sum())
 
+
+inject_custom_css()
 init_user_db()
 
 if "logged_in" not in st.session_state:
@@ -781,11 +1422,14 @@ if not st.session_state.logged_in:
     st.stop()
 
 
-# =========================
-# 主页面
-# =========================
-
-st.sidebar.success(f"当前登录用户：{st.session_state.username}")
+st.sidebar.markdown(
+    f"""
+    <div class="user-badge">
+        当前登录用户：{st.session_state.username}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 if st.sidebar.button("退出登录"):
     st.session_state.logged_in = False
@@ -793,11 +1437,7 @@ if st.sidebar.button("退出登录"):
     st.session_state.latest_result = None
     st.rerun()
 
-st.title("投递侠AI")
-
-st.write("上传多份简历，粘贴岗位JD，投递侠AI会分析岗位匹配度、推荐合适简历，并生成求职沟通话术。")
-
-st.divider()
+render_hero()
 
 st.sidebar.header("求职者信息")
 
@@ -863,18 +1503,22 @@ if uploaded_resumes:
         else:
             st.sidebar.success(f"{uploaded_file.name}：已读取")
 
-st.header("岗位信息")
+render_section_title("岗位信息", "粘贴岗位 JD 后，系统会自动分析岗位方向、匹配度和推荐简历。")
 
-job_title = st.text_input("岗位名称")
-company_name = st.text_input("公司名称")
-city = st.text_input("城市")
-salary = st.text_input("薪资")
-job_link = st.text_input("岗位链接")
+job_col1, job_col2 = st.columns(2)
 
-application_status = st.selectbox(
-    "投递状态",
-    ["未投递", "已投递", "已回复", "已面试", "已拒绝", "已录用", "暂不投递"]
-)
+with job_col1:
+    job_title = st.text_input("岗位名称")
+    city = st.text_input("城市")
+    job_link = st.text_input("岗位链接")
+
+with job_col2:
+    company_name = st.text_input("公司名称")
+    salary = st.text_input("薪资")
+    application_status = st.selectbox(
+        "投递状态",
+        ["未投递", "已投递", "已回复", "已面试", "已拒绝", "已录用", "暂不投递"]
+    )
 
 note = st.text_area(
     "备注",
@@ -952,69 +1596,70 @@ if st.button("分析这个岗位"):
 if st.session_state.latest_result:
     result = st.session_state.latest_result
 
-    st.subheader("岗位分析结果")
+    render_section_title("岗位分析结果", "系统会综合岗位 JD、求职方向和简历内容，给出本次投递建议。")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric("岗位匹配度评分", f"{result['job_score']}/100")
+        render_metric_card("岗位匹配度", f"{result['job_score']}/100", "分数越高，越建议优先投递")
 
     with col2:
-        st.metric("推荐结论", result["recommendation"])
+        render_metric_card("推荐结论", result["recommendation"], "结合岗位要求与候选人信息判断")
 
     with col3:
-        st.metric("推荐简历", result["recommended_resume"])
+        render_metric_card("推荐简历", result["recommended_resume"], "建议本次投递优先使用")
 
-    if result["recommendation"] == "建议投递":
-        st.success("建议投递：这个岗位和求职者背景比较匹配。")
-    elif result["recommendation"] == "可以投递":
-        st.info("可以投递：但建议根据岗位重点调整简历和话术。")
-    else:
-        st.error("不太建议投递：匹配度偏低，可能浪费时间。")
+    render_status_message(result["recommendation"])
 
-    st.subheader("岗位画像")
-    st.write(result["job_profile"])
+    left_result, right_result = st.columns([1.05, 0.95], gap="large")
 
-    st.subheader("岗位分析理由")
-    for reason in result["reasons"]:
-        st.write(f"- {reason}")
+    with left_result:
+        render_info_card("岗位画像", result["job_profile"])
 
-    st.subheader("简历推荐结果")
-    st.write(f"建议使用：**{result['recommended_resume']}**")
+        render_section_title("简历推荐结果")
 
-    if result["resume_match_results"]:
-        st.write("各简历与岗位JD的匹配情况：")
-        st.dataframe(
-            pd.DataFrame(result["resume_match_results"]),
-            use_container_width=True
-        )
-    else:
-        st.info("当前未上传简历文件，系统根据手动填写的简历版本名称进行推荐。")
+        st.write(f"建议使用：**{result['recommended_resume']}**")
 
-    st.subheader("匹配优势")
-    for item in result["strengths"]:
-        st.write(f"- {item}")
+        if result["resume_match_results"]:
+            st.write("各简历与岗位 JD 的匹配情况：")
+            st.dataframe(
+                pd.DataFrame(result["resume_match_results"]),
+                use_container_width=True
+            )
+        else:
+            st.info("当前未上传简历文件，系统根据手动填写的简历版本名称进行推荐。")
 
-    st.subheader("风险点")
-    for item in result["risks"]:
-        st.write(f"- {item}")
+    with right_result:
+        render_section_title("推荐打招呼语")
+        st.write("下面这段可以直接复制到招聘平台：")
+        st.code(result["greeting"], language="text")
+        st.text_area("可复制话术", result["greeting"], height=120)
 
-    st.subheader("简历优化建议")
-    for item in result["suggestions"]:
-        st.write(f"- {item}")
+        st.markdown("**投递动作提醒**")
+        st.write(f"建议上传或选择这份简历：**{result['recommended_resume']}**")
 
-    st.subheader("推荐打招呼语")
+        if job_link.strip():
+            st.link_button("去招聘平台投递这个岗位", job_link)
 
-    st.write("下面这段可以直接复制到招聘平台：")
-    st.code(result["greeting"], language="text")
+    analysis_col1, analysis_col2 = st.columns(2, gap="large")
 
-    st.text_area("可复制话术", result["greeting"], height=120)
+    with analysis_col1:
+        render_section_title("匹配优势")
+        for item in result["strengths"]:
+            st.write(f"- {item}")
 
-    st.subheader("投递动作提醒")
-    st.write(f"建议上传或选择这份简历：**{result['recommended_resume']}**")
+        render_section_title("岗位分析理由")
+        for reason in result["reasons"]:
+            st.write(f"- {reason}")
 
-    if job_link.strip():
-        st.link_button("去招聘平台投递这个岗位", job_link)
+    with analysis_col2:
+        render_section_title("风险点")
+        for item in result["risks"]:
+            st.write(f"- {item}")
+
+        render_section_title("简历优化建议")
+        for item in result["suggestions"]:
+            st.write(f"- {item}")
 
     if st.button("保存到投递记录"):
         if result["resume_match_results"]:
@@ -1059,21 +1704,38 @@ if st.session_state.latest_result:
 
 st.divider()
 
-st.header("历史投递记录")
+render_section_title("历史投递记录", "当前账号的投递记录、状态统计和后续跟进都在这里管理。")
 
 applications_df = load_user_applications(st.session_state.username)
 
 if applications_df.empty:
     st.info("目前还没有保存任何投递记录。")
 else:
-    st.write(f"当前账号共有 {len(applications_df)} 条记录。")
+    total_count = len(applications_df)
+    applied_count = get_count_by_status(applications_df, "已投递")
+    replied_count = get_count_by_status(applications_df, "已回复")
+    interview_count = get_count_by_status(applications_df, "已面试")
+
+    m1, m2, m3, m4 = st.columns(4)
+
+    with m1:
+        render_metric_card("总记录", total_count)
+
+    with m2:
+        render_metric_card("已投递", applied_count)
+
+    with m3:
+        render_metric_card("已回复", replied_count)
+
+    with m4:
+        render_metric_card("已面试", interview_count)
 
     status_counts = applications_df["投递状态"].fillna("未填写").value_counts()
 
-    st.subheader("状态统计")
+    render_section_title("状态统计")
     st.bar_chart(status_counts)
 
-    st.subheader("投递记录表")
+    render_section_title("投递记录表")
 
     display_columns = [
         "保存时间",

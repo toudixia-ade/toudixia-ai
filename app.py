@@ -123,9 +123,39 @@ def inject_custom_css():
 
         .stApp {
             background:
-                radial-gradient(circle at 12% 12%, rgba(37, 99, 235, 0.18), transparent 30%),
-                radial-gradient(circle at 88% 18%, rgba(124, 58, 237, 0.16), transparent 32%),
-                linear-gradient(180deg, #f8fbff 0%, #f3f6fc 100%);
+                radial-gradient(circle at 15% 25%, rgba(37, 99, 235, 0.22), transparent 34%),
+                radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.22), transparent 36%),
+                radial-gradient(circle at 50% 85%, rgba(14, 165, 233, 0.16), transparent 34%),
+                linear-gradient(-45deg, #f8fbff, #eef4ff, #f4f0ff, #eff6ff, #f8fbff);
+            background-size:
+                150% 150%,
+                160% 160%,
+                140% 140%,
+                400% 400%;
+            background-position:
+                0% 0%,
+                100% 0%,
+                50% 100%,
+                0% 50%;
+            animation: safeBackgroundMove 8s ease-in-out infinite alternate;
+            overflow-x: hidden;
+        }
+
+        @keyframes safeBackgroundMove {
+            0% {
+                background-position:
+                    0% 0%,
+                    100% 0%,
+                    50% 100%,
+                    0% 50%;
+            }
+            100% {
+                background-position:
+                    18% 14%,
+                    82% 22%,
+                    60% 82%,
+                    100% 50%;
+            }
         }
 
         .block-container {
@@ -134,6 +164,13 @@ def inject_custom_css():
             padding-bottom: 3rem;
             padding-left: 3rem;
             padding-right: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        section[data-testid="stSidebar"] {
+            position: relative;
+            z-index: 2;
         }
 
         h1, h2, h3 {
@@ -871,7 +908,7 @@ def show_auth_page():
             <div class="value-card">
                 <div class="value-title">应届生 / 留学生</div>
                 <div class="value-text">
-                    面对多个岗位方向，不知道该用哪份简历投递。系统可以根据岗位 JD 判断更适合使用运营版、人力版、行政版还是通用版简历。
+                    面对多个岗位方向，不知道该用哪份简历投递。系统可以根据岗位 JD，判断用户上传的不同版本简历中，哪一份更适合当前岗位。
                 </div>
             </div>
             """,
@@ -897,7 +934,7 @@ def show_auth_page():
             <div class="value-card">
                 <div class="value-title">多方向求职者</div>
                 <div class="value-text">
-                    同时投递运营、HR、行政、市场、管培等岗位时，可以快速判断岗位重点，减少乱投、错投和低质量投递。
+                    同时投递多个不同方向的岗位时，可以快速判断岗位重点，减少乱投、错投和低质量投递。
                 </div>
             </div>
             """,

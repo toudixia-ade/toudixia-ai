@@ -33,6 +33,27 @@ USER_DB_FILE = "users.db"
 ADMIN_USERNAME = "admin_ljp_2026"
 ADMIN_REGISTER_CODE = "LJP_ADMIN_2026_ONLY_ME"
 
+FREE_DAILY_ANALYSIS_LIMIT = 3
+
+# 公测阶段：True = 普通用户不限次数，只记录使用次数
+# 后面正式收费时，把它改成 False，免费用户就会每天限制 3 次
+PUBLIC_BETA_UNLIMITED = True
+
+MEMBERSHIP_TYPES = ["免费试用", "周卡", "月卡", "年卡"]
+UNLIMITED_MEMBERSHIPS = ["周卡", "月卡", "年卡"]
+
+PLAN_PRICES = {
+    "周卡": "¥9.9",
+    "月卡": "¥29.9",
+    "年卡": "¥99",
+}
+
+PLAN_DURATIONS = {
+    "周卡": "7天不限次数",
+    "月卡": "30天不限次数",
+    "年卡": "365天不限次数",
+}
+
 ALL_COLUMNS = [
     "用户名",
     "保存时间",
@@ -121,6 +142,12 @@ def inject_custom_css():
             --border: #e2e8f0;
         }
 
+        html,
+        body,
+        .stApp {
+            color-scheme: light !important;
+        }
+
         html, body, [class*="css"] {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
         }
@@ -162,6 +189,10 @@ def inject_custom_css():
             }
         }
 
+        [data-testid="stAppViewContainer"] {
+            color: #0f172a !important;
+        }
+
         .block-container {
             max-width: 1520px;
             padding-top: 2rem;
@@ -180,6 +211,11 @@ def inject_custom_css():
         h1, h2, h3 {
             color: var(--text);
             letter-spacing: -0.02em;
+        }
+
+        [data-testid="stWidgetLabel"] p {
+            color: #334155 !important;
+            font-weight: 700 !important;
         }
 
         .auth-brand-row {
@@ -383,6 +419,7 @@ def inject_custom_css():
             border: 1px solid rgba(226, 232, 240, 0.9);
             box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
             margin-bottom: 26px;
+            min-height: 210px;
         }
 
         .hero-title {
@@ -411,6 +448,162 @@ def inject_custom_css():
             margin-right: 10px;
             margin-top: 14px;
             box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+        }
+
+        .member-card {
+            padding: 26px 24px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
+            min-height: 210px;
+            margin-bottom: 26px;
+        }
+
+        .member-card-title {
+            font-size: 20px;
+            font-weight: 920;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .member-card-text {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.8;
+            margin-bottom: 18px;
+        }
+
+        .member-status-pill {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 850;
+            margin-bottom: 14px;
+        }
+
+               /* 弹窗外层遮罩：覆盖整个网页 */
+        div[data-baseweb="modal"] {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            max-height: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(15, 23, 42, 0.56) !important;
+            z-index: 999999 !important;
+        }
+
+        /* 弹窗内容本体：居中且加宽 */
+        div[data-baseweb="modal"] div[role="dialog"] {
+            width: min(1180px, 92vw) !important;
+            max-width: 1180px !important;
+            margin: 0 auto !important;
+            border-radius: 24px !important;
+            overflow: hidden !important;
+        }
+
+        /* 兼容 Streamlit dialog 容器 */
+        div[data-testid="stDialog"] {
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        div[data-testid="stDialog"] > div {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .pricing-title {
+            font-size: 30px;
+            font-weight: 950;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .pricing-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.8;
+        }
+
+        .plan-card {
+            padding: 26px 28px;
+            border-radius: 24px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+            min-height: 320px;
+        }
+
+        .plan-card-featured {
+            background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+            border: 1px solid #bfdbfe;
+            box-shadow: 0 18px 46px rgba(37, 99, 235, 0.15);
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 930;
+            color: #0f172a;
+            margin-bottom: 10px;
+            white-space: nowrap;
+        }
+
+        .plan-price {
+            font-size: 42px;
+            font-weight: 950;
+            color: #111827;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            line-height: 1.1;
+        }
+
+        .plan-duration {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 18px;
+            white-space: nowrap;
+        }
+
+        .plan-feature {
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.9;
+            margin-bottom: 6px;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 850;
+            margin-bottom: 12px;
+        }
+
+        .pay-box {
+            padding: 18px 20px;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 14px;
+            line-height: 1.9;
+            margin-top: 18px;
         }
 
         .section-title {
@@ -545,14 +738,111 @@ def inject_custom_css():
         }
 
         .stTextInput input,
-        .stTextArea textarea {
+        .stTextArea textarea,
+        input,
+        textarea {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            caret-color: #2563eb !important;
             border-radius: 14px !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #dbe3ef !important;
             min-height: 42px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+        }
+
+        .stTextInput input:focus,
+        .stTextArea textarea:focus,
+        input:focus,
+        textarea:focus {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+        }
+
+        .stTextInput input::placeholder,
+        .stTextArea textarea::placeholder,
+        input::placeholder,
+        textarea::placeholder {
+            color: #94a3b8 !important;
+            opacity: 1 !important;
         }
 
         .stSelectbox div[data-baseweb="select"] {
             border-radius: 14px !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        .stSelectbox div[data-baseweb="select"] > div {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #dbe3ef !important;
+            border-radius: 14px !important;
+        }
+
+        .stSelectbox div[data-baseweb="select"] span {
+            color: #0f172a !important;
+        }
+
+        .stSelectbox div[data-baseweb="select"] svg {
+            fill: #334155 !important;
+            color: #334155 !important;
+        }
+
+        div[data-baseweb="popover"] {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        div[data-baseweb="popover"] * {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        [role="listbox"] {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        [role="option"] {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        [role="option"]:hover {
+            background-color: #eff6ff !important;
+            color: #1d4ed8 !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"] {
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"] * {
+            color: #334155 !important;
+        }
+
+        [data-testid="stTextInputRootElement"],
+        [data-testid="stTextAreaRootElement"] {
+            background-color: transparent !important;
+        }
+
+        [data-testid="stMarkdownContainer"] p {
+            color: inherit;
+        }
+
+        div[data-testid="stLinkButton"] a,
+        .stLinkButton a {
+            border-radius: 14px !important;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            font-weight: 800 !important;
+            min-height: 42px !important;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.20) !important;
         }
 
         .stTabs [data-baseweb="tab-list"] {
@@ -614,24 +904,6 @@ def inject_custom_css():
     )
 
 
-def render_hero():
-    st.markdown(
-        """
-        <div class="hero-card">
-            <div class="hero-title">投递侠AI</div>
-            <div class="hero-subtitle">
-                AI 简历匹配与半自动投递工作台。上传多份简历，粘贴岗位 JD，系统会自动分析岗位匹配度、推荐合适简历，并生成求职沟通话术。
-            </div>
-            <span class="tag">简历匹配</span>
-            <span class="tag">岗位分析</span>
-            <span class="tag">话术生成</span>
-            <span class="tag">投递记录</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
 def render_metric_card(label, value, note=""):
     note_html = f'<div class="metric-note">{note}</div>' if note else ""
     st.markdown(
@@ -688,6 +960,144 @@ def render_status_message(recommendation):
     )
 
 
+@st.dialog("升级套餐", width="large")
+def show_pricing_dialog():
+    st.markdown(
+        """
+        <div class="pricing-header">
+            <div class="pricing-title">开通会员套餐</div>
+            <div class="pricing-subtitle">
+                当前仍处于公测阶段，普通用户暂时不限次数。这里先展示后续正式付费版本的套餐结构。
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    plan_col1, plan_col2, plan_col3 = st.columns(3, gap="large")
+
+    with plan_col1:
+        st.markdown(
+            f"""
+            <div class="plan-card">
+                <div class="plan-name">周卡</div>
+                <div class="plan-price">{PLAN_PRICES["周卡"]}</div>
+                <div class="plan-duration">{PLAN_DURATIONS["周卡"]}</div>
+                <div class="plan-feature">✓ 不限岗位分析次数</div>
+                <div class="plan-feature">✓ 多份简历智能匹配</div>
+                <div class="plan-feature">✓ 求职沟通话术生成</div>
+                <div class="plan-feature">✓ 适合短期集中投递</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if st.button("选择周卡", use_container_width=True, key="choose_weekly"):
+            st.info("当前公测阶段暂不需要支付。正式上线后，可通过微信/支付宝联系管理员开通周卡。")
+
+    with plan_col2:
+        st.markdown(
+            f"""
+            <div class="plan-card plan-card-featured">
+                <div class="plan-badge">推荐</div>
+                <div class="plan-name">月卡</div>
+                <div class="plan-price">{PLAN_PRICES["月卡"]}</div>
+                <div class="plan-duration">{PLAN_DURATIONS["月卡"]}</div>
+                <div class="plan-feature">✓ 不限岗位分析次数</div>
+                <div class="plan-feature">✓ 多方向简历匹配</div>
+                <div class="plan-feature">✓ 投递记录长期管理</div>
+                <div class="plan-feature">✓ 适合一个求职周期</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if st.button("选择月卡", use_container_width=True, key="choose_monthly"):
+            st.info("当前公测阶段暂不需要支付。正式上线后，可通过微信/支付宝联系管理员开通月卡。")
+
+    with plan_col3:
+        st.markdown(
+            f"""
+            <div class="plan-card">
+                <div class="plan-badge">最划算</div>
+                <div class="plan-name">年卡</div>
+                <div class="plan-price">{PLAN_PRICES["年卡"]}</div>
+                <div class="plan-duration">{PLAN_DURATIONS["年卡"]}</div>
+                <div class="plan-feature">✓ 全年不限岗位分析</div>
+                <div class="plan-feature">✓ 长期保存投递记录</div>
+                <div class="plan-feature">✓ 适合长期求职和跳槽准备</div>
+                <div class="plan-feature">✓ 单月成本更低</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if st.button("选择年卡", use_container_width=True, key="choose_yearly"):
+            st.info("当前公测阶段暂不需要支付。正式上线后，可通过微信/支付宝联系管理员开通年卡。")
+
+    st.markdown(
+        """
+        <div class="pay-box">
+            <strong>开通方式</strong><br>
+            当前为公测阶段，暂不需要实际充值，普通用户也暂时不限次数。<br>
+            正式上线后，用户可通过微信 / 支付宝联系管理员付款，并提供自己的用户名；
+            管理员在后台将账号设置为周卡、月卡或年卡后，即可获得不限次数权限。
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def render_hero():
+    membership = get_user_membership(st.session_state.username)
+    membership_type = membership.get("membership_type", "免费试用")
+
+    if PUBLIC_BETA_UNLIMITED:
+        status_text = "公测不限次数"
+    elif int(membership.get("is_unlimited", 0)) == 1:
+        status_text = f"{membership_type} · 不限次数"
+    else:
+        today_count = get_today_usage_count(st.session_state.username)
+        daily_limit = int(membership.get("daily_limit", FREE_DAILY_ANALYSIS_LIMIT))
+        status_text = f"免费试用 · 今日 {today_count}/{daily_limit} 次"
+
+    hero_left, hero_right = st.columns([4.3, 1.15], gap="large")
+
+    with hero_left:
+        st.markdown(
+            """
+            <div class="hero-card">
+                <div class="hero-title">投递侠AI</div>
+                <div class="hero-subtitle">
+                    AI 简历匹配与半自动投递工作台。上传多份简历，粘贴岗位 JD，系统会自动分析岗位匹配度、推荐合适简历，并生成求职沟通话术。
+                </div>
+                <span class="tag">简历匹配</span>
+                <span class="tag">岗位分析</span>
+                <span class="tag">话术生成</span>
+                <span class="tag">投递记录</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with hero_right:
+        st.markdown(
+            f"""
+            <div class="member-card">
+                <div class="member-status-pill">{status_text}</div>
+                <div class="member-card-title">升级套餐</div>
+                <div class="member-card-text">
+                    开通周卡、月卡或年卡后，可获得不限次数的岗位分析与简历匹配权限。
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if st.button("开通周卡 / 月卡 / 年卡", use_container_width=True):
+            show_pricing_dialog()
+
+
 def init_user_db():
     conn = sqlite3.connect(USER_DB_FILE)
     cursor = conn.cursor()
@@ -699,6 +1109,34 @@ def init_user_db():
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             created_at TEXT NOT NULL
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS user_memberships (
+            username TEXT PRIMARY KEY,
+            membership_type TEXT NOT NULL DEFAULT '免费试用',
+            daily_limit INTEGER NOT NULL DEFAULT 3,
+            is_unlimited INTEGER NOT NULL DEFAULT 0,
+            start_date TEXT,
+            end_date TEXT,
+            updated_at TEXT NOT NULL
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS usage_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            usage_date TEXT NOT NULL,
+            action_type TEXT NOT NULL DEFAULT 'analyze_job',
+            count INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL,
+            UNIQUE(username, usage_date, action_type)
         )
         """
     )
@@ -747,6 +1185,55 @@ def username_exists(username):
     return result is not None
 
 
+def ensure_user_membership(username):
+    username = username.strip()
+
+    if not username:
+        return
+
+    conn = sqlite3.connect(USER_DB_FILE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT username
+        FROM user_memberships
+        WHERE username = ?
+        """,
+        (username,)
+    )
+
+    exists = cursor.fetchone()
+
+    if exists is None:
+        cursor.execute(
+            """
+            INSERT INTO user_memberships (
+                username,
+                membership_type,
+                daily_limit,
+                is_unlimited,
+                start_date,
+                end_date,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                username,
+                "免费试用",
+                FREE_DAILY_ANALYSIS_LIMIT,
+                0,
+                "",
+                "",
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
+
+    conn.commit()
+    conn.close()
+
+
 def create_user(username, password, admin_register_code=""):
     username = username.strip()
 
@@ -786,6 +1273,8 @@ def create_user(username, password, admin_register_code=""):
     conn.commit()
     conn.close()
 
+    ensure_user_membership(username)
+
     return True, "注册成功，请返回登录。"
 
 
@@ -811,11 +1300,159 @@ def login_user(username, password):
     if not verify_password(password, stored_password_hash):
         return False, "用户名或密码错误。"
 
+    ensure_user_membership(username)
+
     return True, "登录成功。"
 
 
 def is_admin_user(username):
     return hmac.compare_digest(username.strip(), ADMIN_USERNAME)
+
+
+def get_user_membership(username):
+    ensure_user_membership(username)
+
+    conn = sqlite3.connect(USER_DB_FILE)
+
+    membership_df = pd.read_sql_query(
+        """
+        SELECT username, membership_type, daily_limit, is_unlimited, start_date, end_date, updated_at
+        FROM user_memberships
+        WHERE username = ?
+        """,
+        conn,
+        params=(username,)
+    )
+
+    conn.close()
+
+    if membership_df.empty:
+        return {
+            "username": username,
+            "membership_type": "免费试用",
+            "daily_limit": FREE_DAILY_ANALYSIS_LIMIT,
+            "is_unlimited": 0,
+            "start_date": "",
+            "end_date": "",
+            "updated_at": "",
+        }
+
+    return membership_df.iloc[0].to_dict()
+
+
+def update_user_membership(username, membership_type, daily_limit=None):
+    username = username.strip()
+    membership_type = membership_type.strip()
+
+    if membership_type not in MEMBERSHIP_TYPES:
+        membership_type = "免费试用"
+
+    is_unlimited = 1 if membership_type in UNLIMITED_MEMBERSHIPS else 0
+
+    if daily_limit is None:
+        daily_limit = FREE_DAILY_ANALYSIS_LIMIT
+
+    if is_unlimited:
+        daily_limit = 999999
+
+    ensure_user_membership(username)
+
+    conn = sqlite3.connect(USER_DB_FILE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE user_memberships
+        SET membership_type = ?,
+            daily_limit = ?,
+            is_unlimited = ?,
+            updated_at = ?
+        WHERE username = ?
+        """,
+        (
+            membership_type,
+            int(daily_limit),
+            int(is_unlimited),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            username
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def get_today_usage_count(username):
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    conn = sqlite3.connect(USER_DB_FILE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT count
+        FROM usage_records
+        WHERE username = ?
+          AND usage_date = ?
+          AND action_type = 'analyze_job'
+        """,
+        (username, today)
+    )
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result is None:
+        return 0
+
+    return int(result[0])
+
+
+def record_analysis_usage(username):
+    today = datetime.now().strftime("%Y-%m-%d")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = sqlite3.connect(USER_DB_FILE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO usage_records (
+            username,
+            usage_date,
+            action_type,
+            count,
+            updated_at
+        )
+        VALUES (?, ?, 'analyze_job', 1, ?)
+        ON CONFLICT(username, usage_date, action_type)
+        DO UPDATE SET
+            count = count + 1,
+            updated_at = excluded.updated_at
+        """,
+        (username, today, now)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def can_user_analyze(username):
+    membership = get_user_membership(username)
+    today_count = get_today_usage_count(username)
+
+    if PUBLIC_BETA_UNLIMITED:
+        return True, "公测阶段不限次数。"
+
+    if int(membership.get("is_unlimited", 0)) == 1:
+        return True, "会员不限次数。"
+
+    daily_limit = int(membership.get("daily_limit", FREE_DAILY_ANALYSIS_LIMIT))
+
+    if today_count < daily_limit:
+        return True, f"今日剩余 {daily_limit - today_count} 次。"
+
+    return False, f"今日免费分析次数已用完，每天免费 {daily_limit} 次。"
 
 
 def create_empty_dataframe():
@@ -883,7 +1520,46 @@ def load_users_for_admin():
 
     conn.close()
 
+    for username in users_df["username"].tolist():
+        ensure_user_membership(username)
+
     return users_df
+
+
+def load_memberships_for_admin():
+    load_users_for_admin()
+
+    conn = sqlite3.connect(USER_DB_FILE)
+
+    memberships_df = pd.read_sql_query(
+        """
+        SELECT username, membership_type, daily_limit, is_unlimited, start_date, end_date, updated_at
+        FROM user_memberships
+        ORDER BY updated_at DESC
+        """,
+        conn
+    )
+
+    conn.close()
+
+    return memberships_df
+
+
+def load_usage_for_admin():
+    conn = sqlite3.connect(USER_DB_FILE)
+
+    usage_df = pd.read_sql_query(
+        """
+        SELECT username, usage_date, action_type, count, updated_at
+        FROM usage_records
+        ORDER BY usage_date DESC, count DESC
+        """,
+        conn
+    )
+
+    conn.close()
+
+    return usage_df
 
 
 def render_admin_dashboard():
@@ -896,7 +1572,7 @@ def render_admin_dashboard():
         <div class="hero-card">
             <div class="hero-title">后台管理</div>
             <div class="hero-subtitle">
-                查看当前应用的注册用户、投递记录和基础数据统计。这里只显示用户信息和业务数据，不显示密码。
+                查看注册用户、投递记录、用户权限和每日分析次数。这里只显示用户信息和业务数据，不显示密码。
             </div>
         </div>
         """,
@@ -905,6 +1581,7 @@ def render_admin_dashboard():
 
     users_df = load_users_for_admin()
     all_applications_df = load_all_applications()
+    usage_df = load_usage_for_admin()
 
     total_users = len(users_df)
     total_applications = len(all_applications_df)
@@ -921,7 +1598,12 @@ def render_admin_dashboard():
     else:
         today_applications = 0
 
-    col1, col2, col3, col4 = st.columns(4)
+    if not usage_df.empty:
+        today_usage_total = usage_df[usage_df["usage_date"].astype(str) == today]["count"].sum()
+    else:
+        today_usage_total = 0
+
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         render_metric_card("注册人数", total_users)
@@ -934,6 +1616,13 @@ def render_admin_dashboard():
 
     with col4:
         render_metric_card("今日新增记录", today_applications)
+
+    with col5:
+        render_metric_card("今日分析次数", int(today_usage_total))
+
+    st.info(
+        "当前处于公测阶段：普通用户暂时不限分析次数，但系统会记录每个用户每天点击“分析这个岗位”的次数。"
+    )
 
     render_section_title("注册用户列表", "这里只显示用户名和注册时间，不显示密码。")
 
@@ -948,6 +1637,78 @@ def render_admin_dashboard():
             label="下载用户数据 CSV",
             data=users_csv,
             file_name="users_admin_export.csv",
+            mime="text/csv"
+        )
+
+    render_section_title("用户权限管理", "可以设置用户为免费试用、周卡、月卡、年卡。周卡、月卡、年卡会被系统识别为不限次数。")
+
+    memberships_df = load_memberships_for_admin()
+
+    if memberships_df.empty:
+        st.info("目前还没有用户权限数据。")
+    else:
+        editable_memberships_df = memberships_df.copy()
+
+        editable_memberships_df["是否不限次数"] = editable_memberships_df["is_unlimited"].apply(
+            lambda x: "是" if int(x) == 1 else "否"
+        )
+
+        display_memberships_df = editable_memberships_df[
+            [
+                "username",
+                "membership_type",
+                "daily_limit",
+                "是否不限次数",
+                "updated_at"
+            ]
+        ].copy()
+
+        edited_memberships_df = st.data_editor(
+            display_memberships_df,
+            use_container_width=True,
+            num_rows="fixed",
+            column_config={
+                "username": st.column_config.TextColumn("用户名"),
+                "membership_type": st.column_config.SelectboxColumn(
+                    "会员类型",
+                    options=MEMBERSHIP_TYPES,
+                    required=True,
+                ),
+                "daily_limit": st.column_config.NumberColumn(
+                    "每日免费次数",
+                    min_value=0,
+                    step=1,
+                ),
+                "是否不限次数": st.column_config.TextColumn("是否不限次数"),
+                "updated_at": st.column_config.TextColumn("更新时间"),
+            },
+            disabled=["username", "是否不限次数", "updated_at"],
+        )
+
+        if st.button("保存用户权限设置"):
+            for _, row in edited_memberships_df.iterrows():
+                update_user_membership(
+                    username=row["username"],
+                    membership_type=row["membership_type"],
+                    daily_limit=row["daily_limit"],
+                )
+
+            st.success("用户权限设置已保存。")
+            st.rerun()
+
+    render_section_title("用户使用次数记录", "这里记录每个用户每天点击“分析这个岗位”的次数。")
+
+    if usage_df.empty:
+        st.info("目前还没有使用次数记录。")
+    else:
+        st.dataframe(usage_df, use_container_width=True)
+
+        usage_csv = usage_df.to_csv(index=False, encoding="utf-8-sig")
+
+        st.download_button(
+            label="下载使用次数记录 CSV",
+            data=usage_csv,
+            file_name="usage_records_admin_export.csv",
             mime="text/csv"
         )
 
@@ -1043,10 +1804,11 @@ def show_auth_page():
                 new_password = st.text_input("设置密码", type="password")
                 confirm_password = st.text_input("确认密码", type="password")
 
-                admin_register_code = ""
-
-                if new_username.strip() == ADMIN_USERNAME:
-                    admin_register_code = st.text_input("管理员注册密钥", type="password")
+                admin_register_code = st.text_input(
+                    "管理员注册密钥",
+                    type="password",
+                    help="普通用户不用填写。只有注册管理员账号时需要。"
+                )
 
                 submitted = st.form_submit_button("注册")
 
@@ -1595,11 +2357,9 @@ if st.sidebar.button("退出登录"):
 
 if is_admin_user(st.session_state.username):
     st.sidebar.divider()
-    admin_mode = st.sidebar.toggle("后台管理模式")
-
-    if admin_mode:
-        render_admin_dashboard()
-        st.stop()
+    st.sidebar.success("管理员后台")
+    render_admin_dashboard()
+    st.stop()
 
 render_hero()
 
@@ -1713,6 +2473,14 @@ if st.button("分析这个岗位"):
     elif not has_resume_source:
         st.warning("请至少上传一份简历，或手动填写可用简历版本。")
     else:
+        can_analyze, limit_message = can_user_analyze(st.session_state.username)
+
+        if not can_analyze:
+            st.error(limit_message)
+            st.stop()
+
+        record_analysis_usage(st.session_state.username)
+
         job_score, reasons = calculate_job_score(
             jd_text=jd_text,
             candidate_identity=candidate_identity,
@@ -1755,6 +2523,9 @@ if st.button("分析这个岗位"):
             "suggestions": suggestions,
             "greeting": greeting,
         }
+
+        if PUBLIC_BETA_UNLIMITED:
+            st.info("公测阶段当前不限分析次数，本次分析已记录到后台。")
 
 
 if st.session_state.latest_result:

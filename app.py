@@ -30,6 +30,9 @@ st.set_page_config(
 DATA_FILE = "applications.csv"
 USER_DB_FILE = "users.db"
 
+ADMIN_USERNAME = "admin_ljp_2026"
+ADMIN_REGISTER_CODE = "LJP_ADMIN_2026_ONLY_ME"
+
 ALL_COLUMNS = [
     "用户名",
     "保存时间",
@@ -744,7 +747,7 @@ def username_exists(username):
     return result is not None
 
 
-def create_user(username, password):
+def create_user(username, password, admin_register_code=""):
     username = username.strip()
 
     if not username:
@@ -755,6 +758,10 @@ def create_user(username, password):
 
     if len(password) < 6:
         return False, "密码至少需要 6 位。"
+
+    if username == ADMIN_USERNAME:
+        if not hmac.compare_digest(admin_register_code.strip(), ADMIN_REGISTER_CODE):
+            return False, "管理员账号不能通过普通注册入口注册。"
 
     if username_exists(username):
         return False, "这个用户名已经被注册，请换一个。"
@@ -805,6 +812,160 @@ def login_user(username, password):
         return False, "用户名或密码错误。"
 
     return True, "登录成功。"
+
+
+def is_admin_user(username):
+    return hmac.compare_digest(username.strip(), ADMIN_USERNAME)
+
+
+def create_empty_dataframe():
+    return pd.DataFrame(columns=ALL_COLUMNS)
+
+
+def ensure_columns(df):
+    for column in ALL_COLUMNS:
+        if column not in df.columns:
+            df[column] = ""
+
+    return df[ALL_COLUMNS]
+
+
+def load_all_applications():
+    if os.path.exists(DATA_FILE):
+        df = pd.read_csv(DATA_FILE, encoding="utf-8-sig")
+        return ensure_columns(df)
+
+    return create_empty_dataframe()
+
+
+def load_user_applications(username):
+    df = load_all_applications()
+
+    if "用户名" not in df.columns:
+        df["用户名"] = ""
+
+    return df[df["用户名"] == username].copy()
+
+
+def save_dataframe(df):
+    df = ensure_columns(df)
+    df.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
+
+
+def save_application(record):
+    df = load_all_applications()
+    new_row = pd.DataFrame([record])
+    df = pd.concat([df, new_row], ignore_index=True)
+    df = ensure_columns(df)
+    save_dataframe(df)
+
+
+def clear_user_applications(username):
+    df = load_all_applications()
+    df = df[df["用户名"] != username].copy()
+    save_dataframe(df)
+
+
+def load_users_for_admin():
+    if not os.path.exists(USER_DB_FILE):
+        return pd.DataFrame(columns=["id", "username", "created_at"])
+
+    conn = sqlite3.connect(USER_DB_FILE)
+
+    users_df = pd.read_sql_query(
+        """
+        SELECT id, username, created_at
+        FROM users
+        ORDER BY id DESC
+        """,
+        conn
+    )
+
+    conn.close()
+
+    return users_df
+
+
+def render_admin_dashboard():
+    if not is_admin_user(st.session_state.username):
+        st.error("你没有权限访问后台管理。")
+        st.stop()
+
+    st.markdown(
+        """
+        <div class="hero-card">
+            <div class="hero-title">后台管理</div>
+            <div class="hero-subtitle">
+                查看当前应用的注册用户、投递记录和基础数据统计。这里只显示用户信息和业务数据，不显示密码。
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    users_df = load_users_for_admin()
+    all_applications_df = load_all_applications()
+
+    total_users = len(users_df)
+    total_applications = len(all_applications_df)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    if not users_df.empty:
+        today_users = users_df["created_at"].astype(str).str.startswith(today).sum()
+    else:
+        today_users = 0
+
+    if not all_applications_df.empty:
+        today_applications = all_applications_df["保存时间"].astype(str).str.startswith(today).sum()
+    else:
+        today_applications = 0
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        render_metric_card("注册人数", total_users)
+
+    with col2:
+        render_metric_card("今日新增用户", today_users)
+
+    with col3:
+        render_metric_card("投递记录数", total_applications)
+
+    with col4:
+        render_metric_card("今日新增记录", today_applications)
+
+    render_section_title("注册用户列表", "这里只显示用户名和注册时间，不显示密码。")
+
+    if users_df.empty:
+        st.info("目前还没有注册用户。")
+    else:
+        st.dataframe(users_df, use_container_width=True)
+
+        users_csv = users_df.to_csv(index=False, encoding="utf-8-sig")
+
+        st.download_button(
+            label="下载用户数据 CSV",
+            data=users_csv,
+            file_name="users_admin_export.csv",
+            mime="text/csv"
+        )
+
+    render_section_title("全部投递记录", "这里显示所有账号保存过的投递记录。")
+
+    if all_applications_df.empty:
+        st.info("目前还没有任何投递记录。")
+    else:
+        st.dataframe(all_applications_df, use_container_width=True)
+
+        applications_csv = all_applications_df.to_csv(index=False, encoding="utf-8-sig")
+
+        st.download_button(
+            label="下载全部投递记录 CSV",
+            data=applications_csv,
+            file_name="all_applications_admin_export.csv",
+            mime="text/csv"
+        )
 
 
 def show_auth_page():
@@ -881,13 +1042,23 @@ def show_auth_page():
                 new_username = st.text_input("设置用户名")
                 new_password = st.text_input("设置密码", type="password")
                 confirm_password = st.text_input("确认密码", type="password")
+
+                admin_register_code = ""
+
+                if new_username.strip() == ADMIN_USERNAME:
+                    admin_register_code = st.text_input("管理员注册密钥", type="password")
+
                 submitted = st.form_submit_button("注册")
 
                 if submitted:
                     if new_password != confirm_password:
                         st.error("两次输入的密码不一致。")
                     else:
-                        success, message = create_user(new_username, new_password)
+                        success, message = create_user(
+                            new_username,
+                            new_password,
+                            admin_register_code
+                        )
 
                         if success:
                             st.success(message)
@@ -960,54 +1131,6 @@ def show_auth_page():
     )
 
     st.markdown(scenario_html, unsafe_allow_html=True)
-
-
-def create_empty_dataframe():
-    return pd.DataFrame(columns=ALL_COLUMNS)
-
-
-def ensure_columns(df):
-    for column in ALL_COLUMNS:
-        if column not in df.columns:
-            df[column] = ""
-
-    return df[ALL_COLUMNS]
-
-
-def load_all_applications():
-    if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE, encoding="utf-8-sig")
-        return ensure_columns(df)
-
-    return create_empty_dataframe()
-
-
-def load_user_applications(username):
-    df = load_all_applications()
-
-    if "用户名" not in df.columns:
-        df["用户名"] = ""
-
-    return df[df["用户名"] == username].copy()
-
-
-def save_dataframe(df):
-    df = ensure_columns(df)
-    df.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
-
-
-def save_application(record):
-    df = load_all_applications()
-    new_row = pd.DataFrame([record])
-    df = pd.concat([df, new_row], ignore_index=True)
-    df = ensure_columns(df)
-    save_dataframe(df)
-
-
-def clear_user_applications(username):
-    df = load_all_applications()
-    df = df[df["用户名"] != username].copy()
-    save_dataframe(df)
 
 
 def extract_text_from_uploaded_file(uploaded_file):
@@ -1469,6 +1592,14 @@ if st.sidebar.button("退出登录"):
     st.session_state.username = ""
     st.session_state.latest_result = None
     st.rerun()
+
+if is_admin_user(st.session_state.username):
+    st.sidebar.divider()
+    admin_mode = st.sidebar.toggle("后台管理模式")
+
+    if admin_mode:
+        render_admin_dashboard()
+        st.stop()
 
 render_hero()
 
